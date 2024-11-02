@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +35,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.chattingapp.R
 import com.example.chattingapp.Screen
+import com.example.chattingapp.ui.theme.Text2
 
 @Composable
 fun SignUpScreen(navController: NavController){
@@ -76,23 +76,23 @@ fun SignUpScreen(navController: NavController){
             Spacer(modifier = Modifier.size(16.dp))
             OutlinedTextField(value = name,
                 onValueChange = {name = it},
-                label = { Text("Name") },
+                label = { Text2("Name") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(value = email,
                 onValueChange = {email = it},
-                label = { Text("Email") },
+                label = { Text2("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(value = password,
                 onValueChange = {password = it},
-                label = { Text("Password") },
+                label = { Text2("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation()
             )
             OutlinedTextField(value = confirmPassword,
                 onValueChange = {confirmPassword = it},
-                label = { Text("Confirm Password") },
+                label = { Text2("Confirm Password") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password!= confirmPassword
@@ -109,11 +109,11 @@ fun SignUpScreen(navController: NavController){
                     Modifier.fillMaxWidth(),
                     enabled = name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && password == confirmPassword
                 ) {
-                    Text(text = "Sign Up")
+                    Text2(text = "Sign Up")
                 }
                 Spacer(modifier = Modifier.size(16.dp))
                 TextButton(onClick = { navController.popBackStack() }) {
-                    Text("Already have an account? Log In")
+                    Text2("Already have an account? Log In")
                 }
             }
         }

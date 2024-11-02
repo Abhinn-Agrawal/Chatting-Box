@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +35,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.chattingapp.R
 import com.example.chattingapp.Screen
-import com.example.chattingapp.feature.auth.signin.SignUpViewModel
+import com.example.chattingapp.ui.theme.Text2
 
 @Composable
 fun LogInScreen(navController: NavController){
@@ -77,12 +76,12 @@ fun LogInScreen(navController: NavController){
             Spacer(modifier = Modifier.size(16.dp))
             OutlinedTextField(value = email,
                 onValueChange = {email = it},
-                label = {Text("Email")},
+                label = {Text2("Email")},
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(value = password,
                 onValueChange = {password = it},
-                label = {Text("Password")},
+                label = {Text2("Password")},
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation()
             )
@@ -96,11 +95,11 @@ fun LogInScreen(navController: NavController){
                     Modifier.fillMaxWidth(),
                     enabled = email.isNotEmpty() && password.isNotEmpty() && (uiState.value == LoginState.Nothing || uiState.value == LoginState.Error)
                 ) {
-                    Text(text = "Log In")
+                    Text2(text = "Log In")
                 }
                 Spacer(modifier = Modifier.size(16.dp))
                 TextButton(onClick = { navController.navigate(Screen.SignUp.route) }) {
-                    Text("Don't have an account? Sign Up")
+                    Text2("Don't have an account? Sign Up")
                 }
             }
         }

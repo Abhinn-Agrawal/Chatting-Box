@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.chattingapp.ui.theme.Channels
+import com.example.chattingapp.ui.theme.ChatBackground
+import com.example.chattingapp.ui.theme.HomeBackground
 import com.example.chattingapp.ui.theme.Text2
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +45,7 @@ fun HomeScreen(navController: NavController){
     val channels = viewModel.channels.collectAsState()
     val addChannel = remember{ mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+
     Scaffold(
         floatingActionButton = {
             Box(modifier = Modifier
@@ -62,6 +66,7 @@ fun HomeScreen(navController: NavController){
         Box(modifier = Modifier
             .padding(it)
             .fillMaxSize()
+            .background(HomeBackground),
         ){
             LazyColumn {
                 items(channels.value){channel->
@@ -71,7 +76,7 @@ fun HomeScreen(navController: NavController){
                                 .fillMaxWidth()
                                 .padding(8.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.Red.copy(0.3f))
+                                .background(Channels.copy(0.3f))
                                 .clickable {
                                     navController.navigate("chat/${channel.id}")
                                 }

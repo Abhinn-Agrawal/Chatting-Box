@@ -30,10 +30,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.chattingapp.feature.home.HomeScreen
 import com.example.chattingapp.model.Message
+import com.example.chattingapp.ui.theme.ChatBackground
 import com.example.chattingapp.ui.theme.Text2
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -42,7 +46,7 @@ import com.google.firebase.auth.auth
 fun ChatScreen(navController: NavController, channelId :String) {
 
     Scaffold {
-        Column(modifier = Modifier.fillMaxSize().padding(it)){
+        Column(modifier = Modifier.fillMaxSize().padding(it).background(color = ChatBackground)){
 
             val viewModel: ChatViewModel = hiltViewModel()
             LaunchedEffect(key1 = true) {
@@ -127,4 +131,10 @@ fun ChatBubble(message: Message){
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewChatScreen(){
+    ChatScreen(navController = rememberNavController(),"test")
 }

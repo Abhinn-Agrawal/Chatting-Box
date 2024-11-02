@@ -43,14 +43,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.chattingapp.ui.theme.Channels
-<<<<<<< HEAD
 import com.example.chattingapp.ui.theme.DarkGray
-import com.example.chattingapp.ui.theme.LightBlue
-=======
-import com.example.chattingapp.ui.theme.ChatBackground
 import com.example.chattingapp.ui.theme.HomeBackground
->>>>>>> 81615976defb4be7a93e2e6b84b4f4d33631027b
+import com.example.chattingapp.ui.theme.LightBlue
 import com.example.chattingapp.ui.theme.Text2
 
 @OptIn(ExperimentalMaterial3Api::class)

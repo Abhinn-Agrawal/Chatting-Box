@@ -1,5 +1,6 @@
 package com.example.chattingapp.feature.chat
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.chattingapp.model.Message
 import com.google.firebase.Firebase
@@ -8,6 +9,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import com.google.firebase.storage.storage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +23,7 @@ class ChatViewModel @Inject constructor():ViewModel() {
     val messages = _messages.asStateFlow()
     private val db = Firebase.database
 
-    fun sendMessage(channelID: String, messageText: String) {
+    fun sendMessage(channelID: String, messageText: String?, image :String? = null) {
         val message = Message(
             db.reference.push().key ?: UUID.randomUUID().toString(),
             Firebase.auth.currentUser?.uid ?: "",
@@ -29,10 +31,28 @@ class ChatViewModel @Inject constructor():ViewModel() {
             System.currentTimeMillis(),
             Firebase.auth.currentUser?.displayName ?: "",
             null,
-            null
+            image
         )
 
         db.reference.child("messages").child(channelID).push().setValue(message)
+    }
+
+    fun sendImageMessage(uri: Uri, channelID: String) {
+        val imageRef = Firebase.storage.reference.child("images/${UUID.randomUUID()}")
+        imageRef.putFile(uri).continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            imageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            val currentUser = Firebase.auth.currentUser
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                sendMessage(channelID, null, downloadUri.toString())
+            }
+        }
     }
 
     fun listenForMessages(channelId:String){
@@ -50,7 +70,7 @@ class ChatViewModel @Inject constructor():ViewModel() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
+                    //Handle error
                 }
             })
 

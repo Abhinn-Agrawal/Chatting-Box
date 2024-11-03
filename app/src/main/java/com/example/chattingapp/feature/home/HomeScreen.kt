@@ -78,7 +78,6 @@ fun HomeScreen(navController: NavController){
         Box(modifier = Modifier
             .padding(it)
             .fillMaxSize()
-            .background(HomeBackground),
         ){
             LazyColumn {
                 item{

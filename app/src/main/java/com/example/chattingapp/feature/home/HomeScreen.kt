@@ -97,7 +97,7 @@ fun HomeScreen(navController: NavController){
                 }
                 items(channels.value){channel->
                     Column {
-                        ChannelItem(channelName = channel.name, onClick = {navController.navigate("chat/${channel.id}")})
+                        ChannelItem(channelName = channel.name, onClick = {navController.navigate("chat/${channel.id}&${channel.name}")},Modifier.padding(horizontal = 16.dp , vertical = 2.dp))
                     }
                 }
             }
@@ -115,10 +115,9 @@ fun HomeScreen(navController: NavController){
 }
 
 @Composable
-fun ChannelItem(channelName:String , onClick:() -> Unit){
-    Row(modifier = Modifier
+fun ChannelItem(channelName:String , onClick:() -> Unit, modifier: Modifier){
+    Row(modifier = modifier
         .fillMaxWidth()
-        .padding(horizontal = 16.dp , vertical = 2.dp)
         .clip(RoundedCornerShape(16.dp))
         .background(DarkGray)
         .clickable { onClick() },

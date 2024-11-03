@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -50,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.chattingapp.R
 import com.example.chattingapp.Screen
+import com.example.chattingapp.feature.home.ChannelItem
 import com.example.chattingapp.model.Message
 import com.example.chattingapp.ui.theme.DarkGray
 import com.example.chattingapp.ui.theme.Purple
@@ -62,7 +64,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ChatScreen(navController: NavController, channelId :String) {
+fun ChatScreen(navController: NavController, channelId :String, channelName :String) {
 
     Scaffold(containerColor = Color.Black) {
 
@@ -78,6 +80,13 @@ fun ChatScreen(navController: NavController, channelId :String) {
                 cameraImageUri.value?.let{
                     viewModel.sendImageMessage(it , channelId)
                 }
+            }
+        }
+        val imageLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) {uri : Uri? ->
+            uri?.let {
+                viewModel.sendImageMessage(it , channelId)
             }
         }
 
@@ -111,7 +120,7 @@ fun ChatScreen(navController: NavController, channelId :String) {
             }
             val messages = viewModel.messages.collectAsState()
 
-            ChatMessages(messages = messages.value,
+            ChatMessages(channelName,messages = messages.value,
                 onSendMessage = { message ->
                     viewModel.sendMessage(channelId, message)
                 },
@@ -130,6 +139,7 @@ fun ChatScreen(navController: NavController, channelId :String) {
                 }
                 , onGallerySelected = {
                     chooserDialog.value = false
+                    imageLauncher.launch("image/*")
                 }
             )
     }
@@ -137,9 +147,9 @@ fun ChatScreen(navController: NavController, channelId :String) {
 
 @Composable
 fun ContentSelectionDialog(onCameraSelected:() -> Unit, onGallerySelected:() -> Unit){
-    AlertDialog(onDismissRequest = { /*TODO*/ },
-        confirmButton = { TextButton(onClick = onCameraSelected){Text2("Camera",color = Color.White)} },
-        dismissButton = {TextButton(onClick = onGallerySelected){Text2("Gallery",color = Color.White)}},
+    AlertDialog(onDismissRequest = {  },
+        confirmButton = { TextButton(onClick = onCameraSelected){Text2("Camera")} },
+        dismissButton = {TextButton(onClick = onGallerySelected){Text2("Gallery")}},
         title = {Text2("Select your source")},
         text = {Text2("Would you like to pick an image from gallery or use the camera?")}
     )
@@ -148,21 +158,22 @@ fun ContentSelectionDialog(onCameraSelected:() -> Unit, onGallerySelected:() -> 
 
 @Composable
 fun ChatMessages(
+    channelName: String,
     messages:List<Message>,
     onSendMessage:(String) -> Unit,
     onImageClicked:() -> Unit
 ){
     val hideKeyboard = LocalSoftwareKeyboardController.current
     val msg = remember{ mutableStateOf("") }
-    Box(modifier = Modifier.fillMaxSize()){
-        LazyColumn {
+    Column(modifier = Modifier.fillMaxSize()){
+        ChannelItem(channelName = channelName,{},modifier = Modifier)
+        LazyColumn(modifier = Modifier.weight(1f)) {
             items(messages){message ->
                 ChatBubble(message = message)
             }
         }
         Row(modifier = Modifier
             .fillMaxWidth()
-            .align(Alignment.BottomCenter)
             .background(color = DarkGray)
             .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -238,7 +249,8 @@ fun ChatBubble(message: Message){
                     AsyncImage(
                         model = message.imageurl,
                         contentDescription = null,
-                        modifier = Modifier.size(200.dp)
+                        modifier = Modifier.size(200.dp),
+                        contentScale = ContentScale.Crop
                     )
                 } else {
                     Text2(text = message.message?.trim() ?: "", color = Color.White)
@@ -251,5 +263,5 @@ fun ChatBubble(message: Message){
 @Preview(showBackground = true)
 @Composable
 fun PreviewChatScreen(){
-    ChatScreen(navController = rememberNavController(),"test")
+    ChatScreen(navController = rememberNavController(),"1","test")
 }

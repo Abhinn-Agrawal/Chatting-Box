@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.dagger.hilt)
     id("com.google.gms.google-services")
-    kotlin("kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
@@ -70,9 +70,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation(libs.dagger.hilt.android)
     implementation(libs.firebase.crashlytics.buildtools)
-    kapt(libs.dagger.hilt.compiler)
+    ksp("com.google.dagger:hilt-compiler:2.51")
     implementation(libs.dagger.hilt.compose)
     implementation(libs.coil)
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))

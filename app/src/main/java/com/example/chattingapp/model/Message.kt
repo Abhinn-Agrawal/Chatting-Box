@@ -5,7 +5,7 @@ data class Message(
     val senderid:String = "",
     val message:String? = "",
     val createdAt:Long = System.currentTimeMillis(),
-    val senderName:String? = null,
+    val senderName:String = "",
     val senderImage:String? = null,
     val imageurl :String? = null
 )

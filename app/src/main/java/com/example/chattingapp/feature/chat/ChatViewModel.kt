@@ -27,13 +27,14 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor(@ApplicationContext val context : Context):ViewModel() {
+class ChatViewModel @Inject constructor(@ApplicationContext val context: Context) : ViewModel() {
+
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages = _messages.asStateFlow()
     private val db = Firebase.database
 
-    fun sendMessage(channelId: String, messageText: String?, image :String? = null) {
+    fun sendMessage(channelName:String ,channelID: String, messageText: String?, image: String? = null) {
         val message = Message(
             db.reference.push().key ?: UUID.randomUUID().toString(),
             Firebase.auth.currentUser?.uid ?: "",
@@ -44,14 +45,15 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
             image
         )
 
-        db.reference.child("messages").child(channelId).push().setValue(message).addOnCompleteListener{
-            if(it.isSuccessful){
-                postNotificationToUsers(channelId, message.senderName , messageText?:"")
+        db.reference.child("messages").child(channelID).push().setValue(message)
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    postNotificationToUsers(channelName,channelID, message.senderName, messageText ?: "")
+                }
             }
-        }
     }
 
-    fun sendImageMessage(uri: Uri, channelID: String) {
+    fun sendImageMessage(uri: Uri, channelID: String, channelName:String) {
         val imageRef = Firebase.storage.reference.child("images/${UUID.randomUUID()}")
         imageRef.putFile(uri).continueWithTask { task ->
             if (!task.isSuccessful) {
@@ -64,17 +66,17 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
             val currentUser = Firebase.auth.currentUser
             if (task.isSuccessful) {
                 val downloadUri = task.result
-                sendMessage(channelID, null, downloadUri.toString())
+                sendMessage(channelName,channelID, null, downloadUri.toString())
             }
         }
     }
 
-    fun listenForMessages(channelId:String){
-        db.getReference("messages").child(channelId).orderByChild("createdAt")
+    fun listenForMessages(channelID: String) {
+        db.getReference("messages").child(channelID).orderByChild("createdAt")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val list = mutableListOf<Message>()
-                    snapshot.children.forEach{ data ->
+                    snapshot.children.forEach { data ->
                         val message = data.getValue(Message::class.java)
                         message?.let {
                             list.add(it)
@@ -84,10 +86,45 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    //Handle error
+                    // Handle error
                 }
             })
+        subscribeForNotification(channelID)
+        registerUserIdtoChannel(channelID)
+    }
 
+    fun getAllUserEmails(channelID: String, callback: (List<String>) -> Unit) {
+        val ref = db.reference.child("channels").child(channelID).child("users")
+        val userIds = mutableListOf<String>()
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                snapshot.children.forEach {
+                    userIds.add(it.value.toString())
+                }
+                callback.invoke(userIds)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback.invoke(emptyList())
+            }
+        })
+    }
+
+    fun registerUserIdtoChannel(channelID: String) {
+        val currentUser = Firebase.auth.currentUser
+        val ref = db.reference.child("channels").child(channelID).child("users")
+        ref.child(currentUser?.uid ?: "").addListenerForSingleValueEvent(
+            object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (!snapshot.exists()) {
+                        ref.child(currentUser?.uid ?: "").setValue(currentUser?.email)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                }
+            }
+        )
     }
 
     private fun subscribeForNotification(channelID: String) {
@@ -103,6 +140,7 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
     }
 
     private fun postNotificationToUsers(
+        channelName:String,
         channelID: String,
         senderName: String,
         messageContent: String
@@ -112,13 +150,14 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
             put("message", JSONObject().apply {
                 put("topic", "group_$channelID")
                 put("notification", JSONObject().apply {
-                    put("title", "New message in $channelID")
+                    put("title", "New message in $channelName")
                     put("body", "$senderName: $messageContent")
                 })
             })
         }
 
         val requestBody = jsonBody.toString()
+
         val request = object : StringRequest(Method.POST, fcmUrl, Response.Listener {
             Log.d("ChatViewModel", "Notification sent successfully")
         }, Response.ErrorListener {
@@ -138,6 +177,7 @@ class ChatViewModel @Inject constructor(@ApplicationContext val context : Contex
         val queue = Volley.newRequestQueue(context)
         queue.add(request)
     }
+
     private fun getAccessToken(): String {
         val inputStream = context.resources.openRawResource(R.raw.chattingbox_key)
         val googleCreds = GoogleCredentials.fromStream(inputStream)

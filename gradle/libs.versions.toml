@@ -15,6 +15,7 @@ coil = "2.6.0"
 material3Android = "1.2.1"
 ksp = "1.9.10-1.0.13"
 volley = "1.2.1"
+material = "1.12.0"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -40,6 +41,7 @@ coil = {module = "io.coil-kt:coil-compose" , version.ref = "coil"}
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 ksp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

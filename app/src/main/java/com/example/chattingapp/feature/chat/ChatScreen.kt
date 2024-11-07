@@ -1,6 +1,7 @@
 package com.example.chattingapp.feature.chat
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,6 +60,8 @@ import com.example.chattingapp.ui.theme.Purple
 import com.example.chattingapp.ui.theme.Text2
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -78,7 +82,7 @@ fun ChatScreen(navController: NavController, channelId :String, channelName :Str
         ) {success ->
             if(success){
                 cameraImageUri.value?.let{
-                    viewModel.sendImageMessage(it , channelId)
+                    viewModel.sendImageMessage(it , channelId,channelName)
                 }
             }
         }
@@ -86,7 +90,7 @@ fun ChatScreen(navController: NavController, channelId :String, channelName :Str
             contract = ActivityResultContracts.GetContent()
         ) {uri : Uri? ->
             uri?.let {
-                viewModel.sendImageMessage(it , channelId)
+                viewModel.sendImageMessage(it , channelId,channelName)
             }
         }
 
@@ -120,11 +124,12 @@ fun ChatScreen(navController: NavController, channelId :String, channelName :Str
             }
             val messages = viewModel.messages.collectAsState()
 
-            ChatMessages(channelName,messages = messages.value,
+            ChatMessages(channelName,channelId,messages = messages.value,
                 onSendMessage = { message ->
-                    viewModel.sendMessage(channelId, message)
+                    viewModel.sendMessage(channelName,channelId, message)
                 },
-                onImageClicked = {chooserDialog.value = true}
+                onImageClicked = {chooserDialog.value = true},
+                viewModel
             )
         }
 
@@ -132,7 +137,7 @@ fun ChatScreen(navController: NavController, channelId :String, channelName :Str
             ContentSelectionDialog(
                 onCameraSelected = {
                     chooserDialog.value = false
-                    if(navController.context.checkSelfPermission(Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                    if(navController.context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
                         cameraImageLauncher.launch(createImageUri())
                     else
                         permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -159,14 +164,34 @@ fun ContentSelectionDialog(onCameraSelected:() -> Unit, onGallerySelected:() -> 
 @Composable
 fun ChatMessages(
     channelName: String,
+    channelId: String,
     messages:List<Message>,
     onSendMessage:(String) -> Unit,
-    onImageClicked:() -> Unit
+    onImageClicked:() -> Unit,
+    viewModel: ChatViewModel
 ){
     val hideKeyboard = LocalSoftwareKeyboardController.current
     val msg = remember{ mutableStateOf("") }
     Column(modifier = Modifier.fillMaxSize()){
-        ChannelItem(channelName = channelName,{},modifier = Modifier)
+        ChannelItem(
+            channelName = channelName,
+            modifier = Modifier,
+            showCallButtons = true,
+            onClick = {},
+            onCall = { callButton ->
+                viewModel.getAllUserEmails(channelId) {
+                    val list: MutableList<ZegoUIKitUser> = mutableListOf()
+                    it.forEach { email ->
+                        Firebase.auth.currentUser?.email?.let { em ->
+                            if (email != em) {
+                                list.add(ZegoUIKitUser(email, email))
+                            }
+                        }
+                    }
+                    callButton.setInvitees(list)
+                }
+            }
+        )
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(messages){message ->
                 ChatBubble(message = message)
@@ -257,6 +282,18 @@ fun ChatBubble(message: Message){
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CallButton(isVideoCall: Boolean, onClick:(ZegoSendCallInvitationButton)->Unit){
+    AndroidView(factory = {context -> val button = ZegoSendCallInvitationButton(context)
+        button.setIsVideoCall(isVideoCall)
+        button.resourceID = "zego_data"
+        button
+    }, modifier = Modifier.size(50.dp)
+    ){zegoCallButton ->
+        zegoCallButton.setOnClickListener{_-> onClick(zegoCallButton)}
     }
 }
 

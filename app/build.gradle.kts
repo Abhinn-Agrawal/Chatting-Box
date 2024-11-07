@@ -83,6 +83,7 @@ dependencies {
     ksp("com.google.dagger:hilt-compiler:2.51")
     implementation(libs.dagger.hilt.compose)
     implementation(libs.coil)
+    implementation(libs.material)
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")

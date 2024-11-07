@@ -27,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,15 +45,33 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.chattingapp.AppId
+import com.example.chattingapp.AppSign
+import com.example.chattingapp.MainActivity
+import com.example.chattingapp.feature.chat.CallButton
 import com.example.chattingapp.ui.theme.DarkGray
 import com.example.chattingapp.ui.theme.HomeBackground
 import com.example.chattingapp.ui.theme.LightBlue
 import com.example.chattingapp.ui.theme.Text2
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController){
-
+    val context = LocalContext.current as MainActivity
+    LaunchedEffect(Unit) {
+        Firebase.auth.currentUser?.let{
+            context.initZegoService(
+                appID = AppId,
+                appSign = AppSign,
+                userID = it.email!!,
+                userName = it.email!!
+            )
+        }
+    }
     val viewModel = hiltViewModel<HomeViewModel>()
     val channels = viewModel.channels.collectAsState()
     val addChannel = remember{ mutableStateOf(false) }
@@ -97,7 +117,12 @@ fun HomeScreen(navController: NavController){
                 }
                 items(channels.value){channel->
                     Column {
-                        ChannelItem(channelName = channel.name, onClick = {navController.navigate("chat/${channel.id}&${channel.name}")},Modifier.padding(horizontal = 16.dp , vertical = 2.dp))
+                        ChannelItem(channelName = channel.name,
+                            onClick = {navController.navigate("chat/${channel.id}&${channel.name}")},
+                            Modifier.padding(horizontal = 16.dp , vertical = 2.dp),
+                            onCall = {},
+                            false
+                        )
                     }
                 }
             }
@@ -115,30 +140,45 @@ fun HomeScreen(navController: NavController){
 }
 
 @Composable
-fun ChannelItem(channelName:String , onClick:() -> Unit, modifier: Modifier){
-    Row(modifier = modifier
-        .fillMaxWidth()
+fun ChannelItem(channelName:String ,
+                onClick:() -> Unit,
+                modifier: Modifier,
+                onCall:(ZegoSendCallInvitationButton)->Unit,
+                showCallButtons:Boolean
+){
+    Box(modifier = modifier.fillMaxWidth()
         .clip(RoundedCornerShape(16.dp))
         .background(DarkGray)
-        .clickable { onClick() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(8.dp)
-                .size(70.dp)
-                .clip(CircleShape)
-                .background(LightBlue.copy(alpha = 0.3f))
+    ){
+        Row(modifier = Modifier.align(Alignment.CenterStart)
+            .clickable { onClick() },
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text2(
-                text = channelName[0].uppercase(),
-                fontSize = 35.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Box(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(70.dp)
+                    .clip(CircleShape)
+                    .background(LightBlue.copy(alpha = 0.3f))
+            ) {
+                Text2(
+                    text = channelName[0].uppercase(),
+                    fontSize = 35.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            Text2(text = channelName, modifier = Modifier.padding(8.dp), color = Color.White)
         }
-        Text2(text = channelName, modifier = Modifier.padding(8.dp), color = Color.White)
+        if(showCallButtons) {
+            Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+                CallButton(isVideoCall = false,onCall)
+                    //voice call to user
+                CallButton(isVideoCall = true,onCall)
+                    //video call to user
+            }
+        }
     }
 }
 
